@@ -17,19 +17,25 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
         
         conteudo_log = self.original_log_msg.content
         linhas = conteudo_log.strip().split("\n")
-        
+
         try:
             membro_id = int(linhas[1].split("ID: ")[1])
-            
             ultima_linha = linhas[-1]
             canal_id = int(ultima_linha.split("CanalID:")[1].split(" ")[0])
             msg_id = int(ultima_linha.split("MsgID:")[1])
-            
-            membro_alvo = interaction.guild.get_member(membro_id)
-            canal_original = interaction.guild.get_channel(canal_id)
+        except Exception:
+            await interaction.followup.send("[ ERRO CRÍTICO ] Os IDs no rodapé da mensagem foram corrompidos ou apagados.", ephemeral=True)
+            await self.original_log_msg.edit(content=f"{conteudo_log}\n\n🛑 **[ ERRO ] RODAPÉ CORROMPIDO. RELATÓRIO INVALIDADO.**", view=None)
+            return
+
+        membro_alvo = interaction.guild.get_member(membro_id)
+        canal_original = interaction.guild.get_channel(canal_id)
+        
+        try:
             mensagem_original = await canal_original.fetch_message(msg_id)
-        except Exception as e:
-            await interaction.followup.send(f"[ ERRO ] Nao foi possivel encontrar os dados da mensagem original. Erro: {e}", ephemeral=True)
+        except Exception:
+            await interaction.followup.send("[ AVISO ] O soldado apagou a mensagem original do chat. Avaliação cancelada.", ephemeral=True)
+            await self.original_log_msg.edit(content=f"{conteudo_log}\n\n🛑 **[ CANCELADO ] O autor deletou a mensagem original do chat.**", view=None)
             return
 
         conteudo_sem_rodape = "\n".join(linhas[:-1])
@@ -39,7 +45,9 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
 
         cor_acao = "🟢 APROVADO" if "APROVADO" in self.acao else "🔴 NEGADO"
         
-        resposta_publica = f"{membro_alvo.mention} O seu relatorio de **{self.tipo}** foi avaliado!\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {self.motivo.value}"
+        mencao_usuario = membro_alvo.mention if membro_alvo else f"<@{membro_id}> (Fora do Servidor)"
+        
+        resposta_publica = f"{mencao_usuario} O seu relatorio de **{self.tipo}** foi avaliado!\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {self.motivo.value}"
         
         try:
             await mensagem_original.reply(resposta_publica)
@@ -61,7 +69,7 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
             
             canal_liberado = interaction.guild.get_channel(config.CANAL_AVAL_LIBERADO)
             if canal_liberado:
-                await canal_liberado.send(f"✅ **AVAL CONCEDIDO**\n\n**Responsavel:** {interaction.user.mention}\n**Solicitante:** {membro_alvo.mention if membro_alvo else 'Desconhecido'}\n\n**Informacoes originarias na LOG.**")
+                await canal_liberado.send(f"✅ **AVAL CONCEDIDO**\n\n**Responsavel:** {interaction.user.mention}\n**Solicitante:** {mencao_usuario}\n\n**Informacoes originarias na LOG.**")
 
         if not erro_cargo:
             await interaction.followup.send(f"Avaliacao concluida com sucesso.", ephemeral=True)
