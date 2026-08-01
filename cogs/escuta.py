@@ -15,18 +15,35 @@ class EscutaCog(commands.Cog):
         tipo = None
         canal_log_id = None
         cargo_id = None
+        
+        conteudo_upper = message.content.upper()
 
         if message.channel.id == config.CANAL_PATRULHA:
+            if "RELATÓRIO DE PATRULHAMENTO" not in conteudo_upper and "RELATORIO DE PATRULHAMENTO" not in conteudo_upper:
+                await message.delete()
+                await message.channel.send(f"⚠️ {message.author.mention}, sua mensagem foi apagada pois não segue o formato padrão de **Relatório de Patrulhamento**.", delete_after=10)
+                return
+                
             tipo = "PATRULHA"
             canal_log_id = config.CANAL_LOG_PATRULHA
             cargo_id = config.CARGO_CHEFIA_OP
             
         elif message.channel.id == config.CANAL_AVAL:
+            if "SOLICITAÇÃO DE AVAL" not in conteudo_upper and "SOLICITACAO DE AVAL" not in conteudo_upper:
+                await message.delete()
+                await message.channel.send(f"⚠️ {message.author.mention}, sua mensagem foi apagada pois não segue o formato padrão de **Solicitação de Aval**.", delete_after=10)
+                return
+                
             tipo = "AVAL"
             canal_log_id = config.CANAL_LOG_AVAL
             cargo_id = config.CARGO_PERM_AVAL
             
         elif message.channel.id == config.CANAL_METAS:
+            if "META SEMANAL CONCLUÍDA" not in conteudo_upper and "META SEMANAL CONCLUIDA" not in conteudo_upper:
+                await message.delete()
+                await message.channel.send(f"⚠️ {message.author.mention}, sua mensagem foi apagada pois não segue o formato padrão de **Meta Semanal**.", delete_after=10)
+                return
+                
             tipo = "META"
             canal_log_id = config.CANAL_LOG_METAS
             cargo_id = config.CARGO_PERM_METAS
