@@ -16,8 +16,30 @@ O bot monitora canais específicos aguardando o envio de relatórios de texto pe
 - `discord.py` (cogs, event listeners, ui)
 - `python-dotenv`
 
-## Como rodar (Local ou Discloud)
+## Como rodar
 
 1. Baixe os arquivos e instale as dependências:
 ```bash
 pip install discord python-dotenv
+
+```
+
+2. No arquivo chamado `.env` coloque o token do seu bot:
+
+```env
+DISCORD_TOKEN=seu_token
+
+```
+
+3. Abra o arquivo `config.py` e insira os IDs corretos do seu servidor (Canais, Cargos de Permissão e Cargos de Concessão).
+4. Ligue o bot:
+
+```bash
+python main.py
+
+```
+Feito por [santosdev11](https://www.google.com/search?q=https://github.com/santosdev11)
+
+```
+
+```
