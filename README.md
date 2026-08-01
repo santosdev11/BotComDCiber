@@ -39,7 +39,3 @@ python main.py
 
 ```
 Feito por [santosdev11](https://www.google.com/search?q=https://github.com/santosdev11)
-
-```
-
-```
