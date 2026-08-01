@@ -41,7 +41,7 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
             await mensagem_original.remove_reaction("⏳", interaction.client.user)
             await mensagem_original.add_reaction("✅" if "APROVADO" in self.acao else "❌")
         except:
-            pass # Ignora se o bot n tiver permissao de reagir
+            pass 
 
         erro_cargo = False
         if self.tipo == "AVAL" and "APROVADO" in self.acao:
