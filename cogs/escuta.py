@@ -48,7 +48,7 @@ class EscutaCog(commands.Cog):
                     
                     ja_processada = False
                     for reaction in msg.reactions:
-                        if str(reaction.emoji) in ["⏳", "✅", "❌"]:
+                        if str(reaction.emoji) in ["⏳", "✅", "❌","➖"]:
                             ja_processada = True
                             break
                     
