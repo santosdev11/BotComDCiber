@@ -76,11 +76,15 @@ class BaseAvaliacaoView(View):
         self.add_item(btn_negar)
 
     async def verificar_permissao(self, interaction: discord.Interaction):
+        if interaction.user.guild_permissions.administrator:
+            return True
+
         if not discord.utils.get(interaction.user.roles, id=self.cargo_necessario):
             await interaction.response.send_message("[ NEGADO ] Voce nao tem autorizacao para avaliar.", ephemeral=True)
             return False
+        
         return True
-
+        
     async def aprovar(self, interaction: discord.Interaction):
         if await self.verificar_permissao(interaction):
             await interaction.response.send_modal(MotivoModal("✅ APROVADO", self.cargo_necessario, interaction.message, self.tipo))
