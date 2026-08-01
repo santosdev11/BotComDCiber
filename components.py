@@ -16,25 +16,30 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
         await interaction.response.send_message(f"Processando a avaliacao de {self.tipo}...", ephemeral=True)
         
         conteudo_log = self.original_log_msg.content
-        linhas = conteudo_log.split("\n")
+        linhas = conteudo_log.strip().split("\n")
         
         try:
             membro_id = int(linhas[1].split("ID: ")[1])
-            canal_id = int(linhas[2].split("ID: ")[1])
-            msg_id = int(linhas[3].split("**Mensagem Original:** ")[1])
+            
+            ultima_linha = linhas[-1]
+            canal_id = int(ultima_linha.split("CanalID:")[1].split(" ")[0])
+            msg_id = int(ultima_linha.split("MsgID:")[1])
             
             membro_alvo = interaction.guild.get_member(membro_id)
             canal_original = interaction.guild.get_channel(canal_id)
             mensagem_original = await canal_original.fetch_message(msg_id)
         except Exception as e:
-            await interaction.followup.send(f"[ ERRO ] Nao foi possivel encontrar os dados da mensagem original. Ela pode ter sido deletada. Erro: {e}", ephemeral=True)
+            await interaction.followup.send(f"[ ERRO ] Nao foi possivel encontrar os dados da mensagem original. Erro: {e}", ephemeral=True)
             return
 
-        novo_conteudo_log = f"{conteudo_log}\n\n━━━━━━━━━━━━━━━━━━━━━━━\n**[ AVALIADO POR {interaction.user.mention} - {self.acao} ]**\n**Motivo:** {self.motivo.value}\n\n-# made by santosdev11"
+        conteudo_sem_rodape = "\n".join(linhas[:-1])
+        novo_conteudo_log = f"{conteudo_sem_rodape}\n\n━━━━━━━━━━━━━━━━━━━━━━━\n**[ AVALIADO POR {interaction.user.mention} - {self.acao} ]**\n**Motivo:** {self.motivo.value}\n{ultima_linha}"
+        
         await self.original_log_msg.edit(content=novo_conteudo_log, view=None)
 
         cor_acao = "🟢 APROVADO" if "APROVADO" in self.acao else "🔴 NEGADO"
-        resposta_publica = f"{membro_alvo.mention} O seu relatorio de **{self.tipo}** foi avaliado!\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {self.motivo.value}\n\n-# made by santosdev11"
+        
+        resposta_publica = f"{membro_alvo.mention} O seu relatorio de **{self.tipo}** foi avaliado!\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {self.motivo.value}"
         
         try:
             await mensagem_original.reply(resposta_publica)
