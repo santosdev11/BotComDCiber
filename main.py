@@ -21,9 +21,9 @@ class ComDCiberBot(commands.Bot):
             if filename.endswith('.py'):
                 await self.load_extension(f'cogs.{filename[:-3]}')
         
-        self.add_view(BaseAvaliacaoView(config.CARGO_CHEFIA_OP, config.CANAL_LOG_PATRULHA, "PATRULHA"))
-        self.add_view(BaseAvaliacaoView(config.CARGO_PERM_AVAL, config.CANAL_LOG_AVAL, "AVAL"))
-        self.add_view(BaseAvaliacaoView(config.CARGO_PERM_METAS, config.CANAL_LOG_METAS, "META"))
+        self.add_view(BaseAvaliacaoView(config.CARGO_CHEFIA_OP, "PATRULHA"))
+        self.add_view(BaseAvaliacaoView(config.CARGO_PERM_AVAL, "AVAL"))
+        self.add_view(BaseAvaliacaoView(config.CARGO_PERM_METAS, "META"))
         
         self.tree.on_error = self.on_app_command_error
         
