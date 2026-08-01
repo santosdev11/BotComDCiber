@@ -38,4 +38,4 @@ DISCORD_TOKEN=seu_token
 python main.py
 
 ```
-Feito por [santosdev11](https://www.google.com/search?q=https://github.com/santosdev11)
+Feito por [santosdev11](https://github.com/santosdev11)
