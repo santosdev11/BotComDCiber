@@ -12,6 +12,8 @@ class EscutaCog(commands.Cog):
         if message.author.bot:
             return
 
+        is_mod = message.author.guild_permissions.manage_messages or message.author.guild_permissions.administrator
+
         tipo = None
         canal_log_id = None
         cargo_id = None
@@ -20,9 +22,10 @@ class EscutaCog(commands.Cog):
 
         if message.channel.id == config.CANAL_PATRULHA:
             if "RELATÓRIO DE PATRULHAMENTO" not in conteudo_upper and "RELATORIO DE PATRULHAMENTO" not in conteudo_upper:
-                await message.delete()
-                await message.channel.send(f"⚠️ {message.author.mention}, sua mensagem foi apagada pois não segue o formato padrão de **Relatório de Patrulhamento**.", delete_after=10)
-                return
+                if not is_mod:
+                    await message.delete()
+                    await message.channel.send(f"⚠️ {message.author.mention}, sua mensagem foi apagada pois não segue o formato padrão de **Relatório de Patrulhamento**.", delete_after=10)
+                return 
                 
             tipo = "PATRULHA"
             canal_log_id = config.CANAL_LOG_PATRULHA
@@ -30,8 +33,9 @@ class EscutaCog(commands.Cog):
             
         elif message.channel.id == config.CANAL_AVAL:
             if "SOLICITAÇÃO DE AVAL" not in conteudo_upper and "SOLICITACAO DE AVAL" not in conteudo_upper:
-                await message.delete()
-                await message.channel.send(f"⚠️ {message.author.mention}, sua mensagem foi apagada pois não segue o formato padrão de **Solicitação de Aval**.", delete_after=10)
+                if not is_mod:
+                    await message.delete()
+                    await message.channel.send(f"⚠️ {message.author.mention}, sua mensagem foi apagada pois não segue o formato padrão de **Solicitação de Aval**.", delete_after=10)
                 return
                 
             tipo = "AVAL"
@@ -40,8 +44,9 @@ class EscutaCog(commands.Cog):
             
         elif message.channel.id == config.CANAL_METAS:
             if "META SEMANAL CONCLUÍDA" not in conteudo_upper and "META SEMANAL CONCLUIDA" not in conteudo_upper:
-                await message.delete()
-                await message.channel.send(f"⚠️ {message.author.mention}, sua mensagem foi apagada pois não segue o formato padrão de **Meta Semanal**.", delete_after=10)
+                if not is_mod:
+                    await message.delete()
+                    await message.channel.send(f"⚠️ {message.author.mention}, sua mensagem foi apagada pois não segue o formato padrão de **Meta Semanal**.", delete_after=10)
                 return
                 
             tipo = "META"
@@ -61,7 +66,6 @@ class EscutaCog(commands.Cog):
                 )
                 
                 await canal_log.send(texto_log, view=BaseAvaliacaoView(cargo_id, tipo))
-                
                 await message.add_reaction("⏳")
 
 async def setup(bot):
