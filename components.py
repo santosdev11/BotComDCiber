@@ -69,7 +69,24 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
             
             canal_liberado = interaction.guild.get_channel(config.CANAL_AVAL_LIBERADO)
             if canal_liberado:
-                await canal_liberado.send(f"✅ **AVAL CONCEDIDO**\n\n**Responsavel:** {interaction.user.mention}\n**Solicitante:** {mencao_usuario}\n\n**Informacoes originarias na LOG.**")
+                msg_formatada = (
+                    "✅ | AVAL CONCEDIDO\n"
+                    "━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    "👤 | Responsável pelo Aval:\n"
+                    f"~ {interaction.user.mention}\n\n"
+                    "📋 | Solicitante do Aval:\n"
+                    f"~ {mencao_usuario}\n\n"
+                    "✅ | Status do Aval:\n"
+                    "~ Concedido\n\n"
+                    "📌 | Motivo do Aval:\n"
+                    f"~ {self.motivo.value}\n\n"
+                    "📝 | Observações:\n"
+                    "~ Avaliado via sistema cibernético.\n\n"
+                    "━━━━━━━━━━━━━━━━━━━━━━━\n"
+                    "⏰ | Data e Horário: Discord Fornece.\n"
+                    "━━━━━━━━━━━━━━━━━━━━━━━"
+                )
+                await canal_liberado.send(msg_formatada)
 
         if not erro_cargo:
             await interaction.followup.send(f"Avaliacao concluida com sucesso.", ephemeral=True)
