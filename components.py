@@ -25,7 +25,9 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
             msg_id = int(ultima_linha.split("MsgID:")[1])
         except Exception:
             await interaction.followup.send("[ ERRO CRÍTICO ] Os IDs no rodapé da mensagem foram corrompidos ou apagados.", ephemeral=True)
-            await self.original_log_msg.edit(content=f"{conteudo_log}\n\n🛑 **[ ERRO ] RODAPÉ CORROMPIDO. RELATÓRIO INVALIDADO.**", view=None)
+            try:
+                await self.original_log_msg.edit(content=f"{conteudo_log[:1900]}\n\n🛑 **[ ERRO ] RODAPÉ CORROMPIDO. RELATÓRIO INVALIDADO.**", view=None)
+            except: pass
             return
 
         membro_alvo = interaction.guild.get_member(membro_id)
@@ -35,19 +37,37 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
             mensagem_original = await canal_original.fetch_message(msg_id)
         except Exception:
             await interaction.followup.send("[ AVISO ] O soldado apagou a mensagem original do chat. Avaliação cancelada.", ephemeral=True)
-            await self.original_log_msg.edit(content=f"{conteudo_log}\n\n🛑 **[ CANCELADO ] O autor deletou a mensagem original do chat.**", view=None)
+            try:
+                await self.original_log_msg.edit(content=f"{conteudo_log[:1900]}\n\n🛑 **[ CANCELADO ] O autor deletou a mensagem original do chat.**", view=None)
+            except: pass
             return
 
+        # NOVO SISTEMA ANTICRASH DE LIMITE DE CARACTERES
         conteudo_sem_rodape = "\n".join(linhas[:-1])
-        novo_conteudo_log = f"{conteudo_sem_rodape}\n\n━━━━━━━━━━━━━━━━━━━━━━━\n**[ AVALIADO POR {interaction.user.mention} - {self.acao} ]**\n**Motivo:** {self.motivo.value}\n{ultima_linha}"
         
-        await self.original_log_msg.edit(content=novo_conteudo_log, view=None)
+        # Limita o motivo a 300 caracteres caso o avaliador escreva um texto muito longo
+        motivo_texto = self.motivo.value[:300] + "..." if len(self.motivo.value) > 300 else self.motivo.value
+        
+        bloco_avaliacao = f"\n\n━━━━━━━━━━━━━━━━━━━━━━━\n**[ AVALIADO POR {interaction.user.mention} - {self.acao} ]**\n**Motivo:** {motivo_texto}\n{ultima_linha}"
+        
+        espaco_livre = 2000 - len(bloco_avaliacao)
+        
+        if len(conteudo_sem_rodape) > espaco_livre:
+            conteudo_sem_rodape = conteudo_sem_rodape[:espaco_livre - 50] + "\n...[TEXTO REDUZIDO PARA AVALIACAO]"
+            
+        novo_conteudo_log = f"{conteudo_sem_rodape}{bloco_avaliacao}"
+        
+        try:
+            await self.original_log_msg.edit(content=novo_conteudo_log, view=None)
+        except Exception as e:
+            await interaction.followup.send(f"[ ERRO CRÍTICO ] Falha na API do Discord ao editar a log: {e}", ephemeral=True)
+            return
 
         cor_acao = "🟢 APROVADO" if "APROVADO" in self.acao else "🔴 NEGADO"
         
         mencao_usuario = membro_alvo.mention if membro_alvo else f"<@{membro_id}> (Fora do Servidor)"
         
-        resposta_publica = f"{mencao_usuario} O seu relatorio de **{self.tipo}** foi avaliado!\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {self.motivo.value}"
+        resposta_publica = f"{mencao_usuario} O seu relatorio de **{self.tipo}** foi avaliado!\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {motivo_texto}"
         
         try:
             await mensagem_original.reply(resposta_publica)
@@ -79,14 +99,17 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
                     "✅ | Status do Aval:\n"
                     "~ Concedido\n\n"
                     "📌 | Motivo do Aval:\n"
-                    f"~ {self.motivo.value}\n\n"
+                    f"~ {motivo_texto}\n\n"
                     "📝 | Observações:\n"
                     "~ Avaliado via sistema cibernético.\n\n"
                     "━━━━━━━━━━━━━━━━━━━━━━━\n"
                     "⏰ | Data e Horário: Discord Fornece.\n"
                     "━━━━━━━━━━━━━━━━━━━━━━━"
                 )
-                await canal_liberado.send(msg_formatada)
+                try:
+                    await canal_liberado.send(msg_formatada)
+                except:
+                    pass
 
         if not erro_cargo:
             await interaction.followup.send(f"Avaliacao concluida com sucesso.", ephemeral=True)
