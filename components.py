@@ -2,8 +2,8 @@ import discord
 from discord.ui import Modal, TextInput, View, Button
 import config
 
-class MotivoModal(Modal, title='Relatorio de Avaliacao'):
-    motivo = TextInput(label='Motivo / Observacao', style=discord.TextStyle.paragraph, required=True)
+class MotivoModal(Modal, title='Relatório de Avaliação'):
+    motivo = TextInput(label='Motivo / Observação', style=discord.TextStyle.paragraph, required=True)
 
     def __init__(self, acao, cargo_id, original_log_msg, tipo):
         super().__init__()
@@ -13,7 +13,7 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
         self.tipo = tipo
 
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.send_message(f"Processando a avaliacao de {self.tipo}...", ephemeral=True)
+        await interaction.response.send_message(f"Processando a avaliação de {self.tipo}...", ephemeral=True)
         
         conteudo_log = self.original_log_msg.content
         linhas = conteudo_log.strip().split("\n")
@@ -42,10 +42,8 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
             except: pass
             return
 
-        # NOVO SISTEMA ANTICRASH DE LIMITE DE CARACTERES
         conteudo_sem_rodape = "\n".join(linhas[:-1])
         
-        # Limita o motivo a 300 caracteres caso o avaliador escreva um texto muito longo
         motivo_texto = self.motivo.value[:300] + "..." if len(self.motivo.value) > 300 else self.motivo.value
         
         bloco_avaliacao = f"\n\n━━━━━━━━━━━━━━━━━━━━━━━\n**[ AVALIADO POR {interaction.user.mention} - {self.acao} ]**\n**Motivo:** {motivo_texto}\n{ultima_linha}"
@@ -53,7 +51,7 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
         espaco_livre = 2000 - len(bloco_avaliacao)
         
         if len(conteudo_sem_rodape) > espaco_livre:
-            conteudo_sem_rodape = conteudo_sem_rodape[:espaco_livre - 50] + "\n...[TEXTO REDUZIDO PARA AVALIACAO]"
+            conteudo_sem_rodape = conteudo_sem_rodape[:espaco_livre - 50] + "\n...[TEXTO REDUZIDO PARA AVALIAÇÃO]"
             
         novo_conteudo_log = f"{conteudo_sem_rodape}{bloco_avaliacao}"
         
@@ -67,7 +65,7 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
         
         mencao_usuario = membro_alvo.mention if membro_alvo else f"<@{membro_id}> (Fora do Servidor)"
         
-        resposta_publica = f"{mencao_usuario} O seu relatorio de **{self.tipo}** foi avaliado!\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {motivo_texto}"
+        resposta_publica = f"{mencao_usuario} O seu relatório de **{self.tipo}** foi avaliado!\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {motivo_texto}"
         
         try:
             await mensagem_original.reply(resposta_publica)
@@ -112,7 +110,7 @@ class MotivoModal(Modal, title='Relatorio de Avaliacao'):
                     pass
 
         if not erro_cargo:
-            await interaction.followup.send(f"Avaliacao concluida com sucesso.", ephemeral=True)
+            await interaction.followup.send(f"Avaliação concluída com sucesso.", ephemeral=True)
 
 class BaseAvaliacaoView(View):
     def __init__(self, cargo_necessario, tipo):
@@ -133,7 +131,7 @@ class BaseAvaliacaoView(View):
             return True
 
         if not discord.utils.get(interaction.user.roles, id=self.cargo_necessario):
-            await interaction.response.send_message("[ NEGADO ] Voce nao tem autorizacao para avaliar.", ephemeral=True)
+            await interaction.response.send_message("[ NEGADO ] Você não tem autorização para avaliar.", ephemeral=True)
             return False
         
         return True
