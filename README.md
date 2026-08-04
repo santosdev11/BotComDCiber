@@ -2,17 +2,17 @@
 
 Bot desenvolvido em Python para automatizar os processos administrativos, operacionais e punitivos do servidor **Comando de Defesa Cibernética**. 
 
-O sistema opera utilizando o conceito inovador de **Discord-as-a-Database**[cite: 4]. Em vez de depender de bancos de dados externos (como SQL), ele funciona de forma orgânica lendo, processando e consultando as próprias mensagens de Log diretamente nos canais[cite: 4].
+O sistema opera utilizando o conceito inovador de **Discord-as-a-Database**. Em vez de depender de bancos de dados externos (como SQL), ele funciona de forma orgânica lendo, processando e consultando as próprias mensagens de Log diretamente nos canais.
 
 ---
 
 ## ⚙️ Principais Funcionalidades
 
 ### 1. Sistema de Relatórios e Auto-Moderação
-O bot monitora canais de subordinação aguardando o envio de relatórios de texto pelos militares[cite: 4].
-*   **Filtro de Padrão:** Apaga instantaneamente mensagens de usuários comuns que não contenham o formato correto (ex: sem a palavra-chave "RELATÓRIO DE PATRULHAMENTO")[cite: 4].
-*   **Integração Visual:** Relatórios válidos recebem a reação ⏳ e são espelhados na sala de Logs para a chefia[cite: 4].
-*   **Aprovação Interativa (Views):** Administradores aprovam/reprovam os relatórios por botões[cite: 4], informando o motivo através de um painel Modal. O sistema avisa o soldado automaticamente e pode entregar cargos (ex: Aval Concedido).
+O bot monitora canais de subordinação aguardando o envio de relatórios de texto pelos militares.
+*   **Filtro de Padrão:** Apaga instantaneamente mensagens de usuários comuns que não contenham o formato correto (ex: sem a palavra-chave "RELATÓRIO DE PATRULHAMENTO").
+*   **Integração Visual:** Relatórios válidos recebem a reação ⏳ e são espelhados na sala de Logs para os administradores.
+*   **Aprovação Interativa (Views):** Administradores aprovam/reprovam os relatórios por botões, informando o motivo através de um painel Modal. O sistema avisa o soldado automaticamente e pode entregar cargos (ex: Aval Concedido).
 
 ### 2. Sistema Punitivo (Exílio e Blacklist)
 Ferramentas avançadas para a Diretoria e Alto Comando manterem a ordem no servidor.
@@ -48,9 +48,9 @@ O bot utiliza *Slash Commands* (`/comando`), acessíveis mediante hierarquia:
 ---
 
 ## 🛠️ Stack
-*   **Linguagem:** Python 3[cite: 4]
-*   **Bibliotecas Principais:** `discord.py` (Cogs, Event Listeners, UI/Modals, app_commands), `python-dotenv`[cite: 4]
-*   **Arquitetura:** Modular (`main.py`, `config.py`, `components.py` e pasta `cogs/`)[cite: 4]
+*   **Linguagem:** Python 3
+*   **Bibliotecas Principais:** `discord.py` (Cogs, Event Listeners, UI/Modals, app_commands), `python-dotenv`
+*   **Arquitetura:** Modular (`main.py`, `config.py`, `components.py` e pasta `cogs/`)
 
 ---
 
