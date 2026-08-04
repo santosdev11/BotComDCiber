@@ -13,7 +13,7 @@ class MotivoModal(Modal, title='Relatório de Avaliação'):
         self.tipo = tipo
 
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.send_message(f"Processando a avaliação de {self.tipo}...", ephemeral=True)
+        await interaction.response.send_message(f"Processando avaliação de {self.tipo}.", ephemeral=True)
         
         conteudo_log = self.original_log_msg.content
         linhas = conteudo_log.strip().split("\n")
@@ -24,9 +24,9 @@ class MotivoModal(Modal, title='Relatório de Avaliação'):
             canal_id = int(ultima_linha.split("CanalID:")[1].split(" ")[0])
             msg_id = int(ultima_linha.split("MsgID:")[1])
         except Exception:
-            await interaction.followup.send("[ ERRO CRÍTICO ] Os IDs no rodapé da mensagem foram corrompidos ou apagados.", ephemeral=True)
+            await interaction.followup.send("[ ERRO CRÍTICO ] Falha de integridade: IDs de rodapé corrompidos.", ephemeral=True)
             try:
-                await self.original_log_msg.edit(content=f"{conteudo_log[:1900]}\n\n🛑 **[ ERRO ] RODAPÉ CORROMPIDO. RELATÓRIO INVALIDADO.**", view=None)
+                await self.original_log_msg.edit(content=f"{conteudo_log[:1900]}\n\n**[ ERRO ] RODAPÉ CORROMPIDO. RELATÓRIO INVALIDADO.**", view=None)
             except: pass
             return
 
@@ -36,14 +36,13 @@ class MotivoModal(Modal, title='Relatório de Avaliação'):
         try:
             mensagem_original = await canal_original.fetch_message(msg_id)
         except Exception:
-            await interaction.followup.send("[ AVISO ] O soldado apagou a mensagem original do chat. Avaliação cancelada.", ephemeral=True)
+            await interaction.followup.send("[ AVISO ] Mensagem de origem não localizada. Avaliação abortada.", ephemeral=True)
             try:
-                await self.original_log_msg.edit(content=f"{conteudo_log[:1900]}\n\n🛑 **[ CANCELADO ] O autor deletou a mensagem original do chat.**", view=None)
+                await self.original_log_msg.edit(content=f"{conteudo_log[:1900]}\n\n**[ CANCELADO ] Mensagem de origem deletada pelo autor.**", view=None)
             except: pass
             return
 
         conteudo_sem_rodape = "\n".join(linhas[:-1])
-        
         motivo_texto = self.motivo.value[:300] + "..." if len(self.motivo.value) > 300 else self.motivo.value
         
         bloco_avaliacao = f"\n\n━━━━━━━━━━━━━━━━━━━━━━━\n**[ AVALIADO POR {interaction.user.mention} - {self.acao} ]**\n**Motivo:** {motivo_texto}\n{ultima_linha}"
@@ -58,14 +57,13 @@ class MotivoModal(Modal, title='Relatório de Avaliação'):
         try:
             await self.original_log_msg.edit(content=novo_conteudo_log, view=None)
         except Exception as e:
-            await interaction.followup.send(f"[ ERRO CRÍTICO ] Falha na API do Discord ao editar a log: {e}", ephemeral=True)
+            await interaction.followup.send(f"[ ERRO CRÍTICO ] Falha na API ao editar log: {e}", ephemeral=True)
             return
 
-        cor_acao = "🟢 APROVADO" if "APROVADO" in self.acao else "🔴 NEGADO"
-        
+        cor_acao = "APROVADO" if "APROVADO" in self.acao else "NEGADO"
         mencao_usuario = membro_alvo.mention if membro_alvo else f"<@{membro_id}> (Fora do Servidor)"
         
-        resposta_publica = f"{mencao_usuario} O seu relatório de **{self.tipo}** foi avaliado!\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {motivo_texto}"
+        resposta_publica = f"{mencao_usuario} Relatório de **{self.tipo}** processado.\n\n**Status:** {cor_acao}\n**Avaliador:** {interaction.user.mention}\n**Motivo:** {motivo_texto}"
         
         try:
             await mensagem_original.reply(resposta_publica)
@@ -83,25 +81,25 @@ class MotivoModal(Modal, title='Relatório de Avaliação'):
                     await membro_alvo.add_roles(cargo_aval)
                 except discord.Forbidden:
                     erro_cargo = True
-                    await interaction.followup.send("[ ALERTA ] Discord bloqueou a entrega do cargo (Hierarquia de cargos baixa).", ephemeral=True)
+                    await interaction.followup.send("[ ERRO ] Falha na atribuição de cargo por hierarquia de permissões.", ephemeral=True)
             
             canal_liberado = interaction.guild.get_channel(config.CANAL_AVAL_LIBERADO)
             if canal_liberado:
                 msg_formatada = (
-                    "✅ | AVAL CONCEDIDO\n"
+                    "[ AVAL CONCEDIDO ]\n"
                     "━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    "👤 | Responsável pelo Aval:\n"
+                    "Responsável pelo Aval:\n"
                     f"~ {interaction.user.mention}\n\n"
-                    "📋 | Solicitante do Aval:\n"
+                    "Solicitante do Aval:\n"
                     f"~ {mencao_usuario}\n\n"
-                    "✅ | Status do Aval:\n"
+                    "Status do Aval:\n"
                     "~ Concedido\n\n"
-                    "📌 | Motivo do Aval:\n"
+                    "Motivo do Aval:\n"
                     f"~ {motivo_texto}\n\n"
-                    "📝 | Observações:\n"
+                    "Observações:\n"
                     "~ Avaliado via sistema cibernético.\n\n"
                     "━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    "⏰ | Data e Horário: Discord Fornece.\n"
+                    "Data e Horário: Discord Fornece.\n"
                     "━━━━━━━━━━━━━━━━━━━━━━━"
                 )
                 try:
@@ -110,7 +108,7 @@ class MotivoModal(Modal, title='Relatório de Avaliação'):
                     pass
 
         if not erro_cargo:
-            await interaction.followup.send(f"Avaliação concluída com sucesso.", ephemeral=True)
+            await interaction.followup.send("Avaliação registrada.", ephemeral=True)
 
 class BaseAvaliacaoView(View):
     def __init__(self, cargo_necessario, tipo):
@@ -118,11 +116,11 @@ class BaseAvaliacaoView(View):
         self.cargo_necessario = cargo_necessario
         self.tipo = tipo
         
-        btn_aprovar = Button(label="Aprovar", style=discord.ButtonStyle.success, custom_id=f"btn_aprovar_{tipo}", emoji="✅")
+        btn_aprovar = Button(label="Aprovar", style=discord.ButtonStyle.success, custom_id=f"btn_aprovar_{tipo}")
         btn_aprovar.callback = self.aprovar
         self.add_item(btn_aprovar)
         
-        btn_negar = Button(label="Negar", style=discord.ButtonStyle.danger, custom_id=f"btn_negar_{tipo}", emoji="❌")
+        btn_negar = Button(label="Negar", style=discord.ButtonStyle.danger, custom_id=f"btn_negar_{tipo}")
         btn_negar.callback = self.negar
         self.add_item(btn_negar)
 
@@ -131,7 +129,7 @@ class BaseAvaliacaoView(View):
             return True
 
         if not discord.utils.get(interaction.user.roles, id=self.cargo_necessario):
-            await interaction.response.send_message("[ NEGADO ] Você não tem autorização para avaliar.", ephemeral=True)
+            await interaction.response.send_message("Acesso negado. Patente insuficiente para avaliação.", ephemeral=True)
             return False
         
         return True
