@@ -9,7 +9,6 @@ class ComandosCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # trava de segurança: apenas cargos iguais ou superiores à Diretoria
     async def verificar_diretoria(self, interaction: discord.Interaction):
         if interaction.user.guild_permissions.administrator:
             return True
@@ -17,31 +16,31 @@ class ComandosCog(commands.Cog):
         cargo_diretoria = interaction.guild.get_role(config.CARGO_DIRETORIA)
         
         if not cargo_diretoria:
-            await interaction.response.send_message("⚠️ [ ERRO ] Cargo de Diretoria não encontrado nas configurações.", ephemeral=True)
+            await interaction.response.send_message("Erro interno: Cargo de Diretoria não configurado.", ephemeral=True)
             return False
             
         if interaction.user.top_role.position >= cargo_diretoria.position:
             return True
             
-        await interaction.response.send_message("⚠️ [ NEGADO ] Você não possui hierarquia (Diretoria ou superior) para usar este comando.", ephemeral=True)
+        await interaction.response.send_message("Acesso negado. Patente insuficiente para esta ação.", ephemeral=True)
         return False
 
     # ---------------------------------------------------------
-    # COMANDO: HELP          
+    # COMANDO: HELP  
     # ---------------------------------------------------------
-    @app_commands.command(name="help", description="Exibe a lista de comandos disponíveis no sistema cibernético.")
+    @app_commands.command(name="help", description="Lista os comandos disponíveis no sistema.")
     async def help_cmd(self, interaction: discord.Interaction):
         embed = discord.Embed(
             title="<:CYBER:1523690802021138563> Painel de Comandos - Defesa Cibernética",
-            description="Abaixo estão listados todos os comandos operacionais do sistema:",
+            description="Comandos operacionais disponíveis no sistema:",
             color=discord.Color.dark_theme()
         )
         
-        embed.add_field(name="👮‍♂️ `/patrulhamentos`", value="Consulta a quantidade de patrulhas aprovadas de um militar.\n**Acesso:** Livre", inline=False)
-        embed.add_field(name="🛡️ `/exilar`", value="Gera relatório, exila e expulsa/bane o militar do servidor.\n**Acesso:** Diretoria+", inline=False)
-        embed.add_field(name="🛡️ `/blacklist`", value="Gera relatório, aplica blacklist e expulsa/bane do servidor.\n**Acesso:** Diretoria+", inline=False)
-        embed.add_field(name="📂 `/infoexilio`", value="Puxa a ficha de exílio completa de um membro.\n**Acesso:** Livre", inline=False)
-        embed.add_field(name="📂 `/infoblacklist`", value="Puxa a ficha de blacklist completa de um indivíduo.\n**Acesso:** Livre", inline=False)
+        embed.add_field(name="`/patrulhamentos`", value="Consulta a quantidade de patrulhas aprovadas de um militar.\nAcesso: Livre", inline=False)
+        embed.add_field(name="`/exilar`", value="Gera relatório, exila e expulsa/bane o alvo do servidor.\nAcesso: Diretoria+", inline=False)
+        embed.add_field(name="`/blacklist`", value="Gera relatório, aplica blacklist e expulsa/bane o alvo.\nAcesso: Diretoria+", inline=False)
+        embed.add_field(name="`/infoexilio`", value="Puxa o histórico de exílio de um membro.\nAcesso: Livre", inline=False)
+        embed.add_field(name="`/infoblacklist`", value="Puxa o histórico de blacklist de um indivíduo.\nAcesso: Livre", inline=False)
         
         embed.set_footer(text=f"Solicitado por {interaction.user.name}", icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None)
         
@@ -51,13 +50,13 @@ class ComandosCog(commands.Cog):
     # COMANDO: PATRULHAMENTOS  
     # ---------------------------------------------------------
     @app_commands.command(name="patrulhamentos", description="Consulta quantos patrulhamentos aprovados um militar possui.")
-    @app_commands.describe(militar="Militar que você deseja consultar (Ex: @Meliante)")
+    @app_commands.describe(militar="Militar a ser consultado (Ex: @Meliante)")
     async def patrulhamentos(self, interaction: discord.Interaction, militar: discord.Member):
         await interaction.response.defer(ephemeral=False)
         
         canal_log = interaction.guild.get_channel(config.CANAL_LOG_PATRULHA)
         if not canal_log:
-            await interaction.followup.send("⚠️ [ ERRO ] Canal de logs de patrulha não encontrado nas configurações.")
+            await interaction.followup.send("Erro de configuração: canal de logs não localizado.")
             return
         
         contagem = 0
@@ -67,11 +66,11 @@ class ComandosCog(commands.Cog):
                     contagem += 1
                     
         embed = discord.Embed(
-            title="📊 Relatório de Serviço",
-            description=f"O militar {militar.mention} possui **{contagem}** patrulhamento(s) aprovado(s) registrados no sistema.",
-            color=discord.Color.blue()
+            title="Relatório de Serviço",
+            description=f"Constam **{contagem}** patrulhamentos aprovados no registro de {militar.mention}.",
+            color=discord.Color.dark_theme()
         )
-        embed.set_footer(text="Consulta via banco de dados do Discord")
+        embed.set_footer(text="Consulta realizada via banco de logs")
         await interaction.followup.send(embed=embed)
 
 
@@ -85,36 +84,36 @@ class ComandosCog(commands.Cog):
         cargo="Cargo que ele ocupava",
         prazo="Prazo textual que vai no relatório (Ex: 7 dias, Permanente)",
         motivo="Motivo detalhado da punição",
-        acao_discord="O que o bot deve fazer com a conta dele no servidor?",
-        comprovacao_texto="Link da prova (Opcional se enviar o arquivo abaixo)",
-        comprovacao_arquivo="Anexe Print/Vídeo (Opcional se enviar o link acima)"
+        acao_discord="Ação a ser executada na conta",
+        comprovacao_texto="Link da prova (Opcional se enviar arquivo)",
+        comprovacao_arquivo="Anexo de Print/Vídeo (Opcional se enviar link)"
     )
     @app_commands.choices(acao_discord=[
-        Choice(name="Expulsar (Kick) - Ideal para prazos curtos", value="kick"),
-        Choice(name="Banir - Ideal para prazos permanentes", value="ban")
+        Choice(name="Expulsar (Kick)", value="kick"),
+        Choice(name="Banir (Ban)", value="ban")
     ])
     async def exilar(self, interaction: discord.Interaction, usuario: discord.User, nick: str, cargo: str, prazo: str, motivo: str, acao_discord: str, comprovacao_texto: str = None, comprovacao_arquivo: discord.Attachment = None):
         if not await self.verificar_diretoria(interaction): return
         
         if not comprovacao_texto and not comprovacao_arquivo:
-            await interaction.response.send_message("⚠️ [ ERRO ] Você deve fornecer uma prova! Preencha o link no campo de texto OU anexe um arquivo.", ephemeral=True)
+            await interaction.response.send_message("Ação cancelada: É obrigatório fornecer ao menos uma prova (link ou anexo).", ephemeral=True)
             return
 
         await interaction.response.defer(ephemeral=True)
         
         canal = interaction.guild.get_channel(config.CANAL_EXILIO)
         if not canal:
-            await interaction.followup.send("⚠️ Erro: Chat de Exílio não encontrado nas configurações.")
+            await interaction.followup.send("Erro interno: Canal de Exílio não definido.")
             return
 
         arquivos = []
         if comprovacao_arquivo:
             if comprovacao_arquivo.size > 8388608:
-                await interaction.followup.send("⚠️ [ ALERTA DE RAM ] O arquivo anexado é muito pesado (maior que 8MB). Por favor, use um link do YouTube/Imgur no campo 'comprovacao_texto' para não travar o sistema.")
+                await interaction.followup.send("Arquivo rejeitado: tamanho superior a 8MB. Utilize um link externo no campo de texto.")
                 return
             arquivos.append(await comprovacao_arquivo.to_file())
 
-        texto_prova = comprovacao_texto if comprovacao_texto else "Provas anexadas abaixo."
+        texto_prova = comprovacao_texto if comprovacao_texto else "Provas anexadas neste registro."
         data_atual = datetime.now().strftime("%d/%m/%Y")
         
         mensagem = (
@@ -137,21 +136,21 @@ class ComandosCog(commands.Cog):
         try:
             membro_presente = interaction.guild.get_member(usuario.id)
             if acao_discord == "ban":
-                await interaction.guild.ban(usuario, reason=f"Exilado por {interaction.user.name} - Prazo: {prazo}")
+                await interaction.guild.ban(usuario, reason=f"Exílio autorizado por {interaction.user.name} - Prazo: {prazo}")
                 acao_texto = "banido"
             else:
                 if membro_presente:
-                    await interaction.guild.kick(usuario, reason=f"Exilado por {interaction.user.name} - Prazo: {prazo}")
+                    await interaction.guild.kick(usuario, reason=f"Exílio autorizado por {interaction.user.name} - Prazo: {prazo}")
                     acao_texto = "expulso"
                 else:
-                    await interaction.followup.send(f"✅ Relatório criado! Aviso: {usuario.mention} **já tinha saído do servidor**, portanto não foi expulso pelo bot (mas o registro foi salvo).")
+                    await interaction.followup.send(f"Registro processado. {usuario.mention} já não se encontra no servidor, remoção ignorada.")
                     return
                 
-            await interaction.followup.send(f"✅ Registro criado! {usuario.mention} foi exilado e **{acao_texto}** do servidor com sucesso.")
+            await interaction.followup.send(f"Operação concluída. {usuario.mention} foi exilado e {acao_texto} do servidor.")
         except discord.Forbidden:
-            await interaction.followup.send(f"⚠️ O relatório foi salvo no chat, mas o Discord **bloqueou a ação** automática. Remova-o manualmente!")
+            await interaction.followup.send("O relatório foi registrado, mas o sistema bloqueou a ação no usuário por hierarquia de cargos. Remova-o manualmente.")
         except Exception as e:
-            await interaction.followup.send(f"⚠️ Relatório salvo, mas ocorreu um erro com o Discord: {e}")
+            await interaction.followup.send(f"Relatório salvo. Ocorreu uma falha na API ao interagir com o usuário: {e}")
 
 
     # ---------------------------------------------------------
@@ -163,36 +162,36 @@ class ComandosCog(commands.Cog):
         nick="Nick/Nome do usuário",
         prazo="Prazo textual que vai no relatório (Ex: 30 dias, Permanente)",
         motivo="Motivo detalhado da blacklist",
-        acao_discord="O que o bot deve fazer com a conta dele no servidor?",
-        comprovacao_texto="Link da prova (Opcional se enviar o arquivo abaixo)",
-        comprovacao_arquivo="Anexe Print/Vídeo (Opcional se enviar o link acima)"
+        acao_discord="Ação a ser executada na conta",
+        comprovacao_texto="Link da prova (Opcional se enviar arquivo)",
+        comprovacao_arquivo="Anexo de Print/Vídeo (Opcional se enviar link)"
     )
     @app_commands.choices(acao_discord=[
-        Choice(name="Banir do Servidor", value="ban"),
-        Choice(name="Expulsar (Kick) do Servidor", value="kick")
+        Choice(name="Banir (Ban)", value="ban"),
+        Choice(name="Expulsar (Kick)", value="kick")
     ])
     async def blacklist(self, interaction: discord.Interaction, usuario: discord.User, nick: str, prazo: str, motivo: str, acao_discord: str, comprovacao_texto: str = None, comprovacao_arquivo: discord.Attachment = None):
         if not await self.verificar_diretoria(interaction): return
         
         if not comprovacao_texto and not comprovacao_arquivo:
-            await interaction.response.send_message("⚠️ [ ERRO ] Você deve fornecer uma prova! Preencha o link no campo de texto OU anexe um arquivo.", ephemeral=True)
+            await interaction.response.send_message("Ação cancelada: É obrigatório fornecer ao menos uma prova (link ou anexo).", ephemeral=True)
             return
         
         await interaction.response.defer(ephemeral=True)
         
         canal = interaction.guild.get_channel(config.CANAL_BLACKLIST)
         if not canal:
-            await interaction.followup.send("⚠️ Erro: Chat de Blacklist não encontrado nas configurações.")
+            await interaction.followup.send("Erro interno: Canal de Blacklist não definido.")
             return
 
         arquivos = []
         if comprovacao_arquivo:
             if comprovacao_arquivo.size > 8388608:
-                await interaction.followup.send("⚠️ [ ALERTA DE RAM ] O arquivo anexado é muito pesado (maior que 8MB). Por favor, use um link do YouTube/Imgur no campo 'comprovacao_texto' para não travar o sistema.")
+                await interaction.followup.send("Arquivo rejeitado: tamanho superior a 8MB. Utilize um link externo no campo de texto.")
                 return
             arquivos.append(await comprovacao_arquivo.to_file())
 
-        texto_prova = comprovacao_texto if comprovacao_texto else "Provas anexadas abaixo."
+        texto_prova = comprovacao_texto if comprovacao_texto else "Provas anexadas neste registro."
         data_atual = datetime.now().strftime("%d/%m/%Y")
         
         mensagem = (
@@ -214,67 +213,75 @@ class ComandosCog(commands.Cog):
         try:
             membro_presente = interaction.guild.get_member(usuario.id)
             if acao_discord == "ban":
-                await interaction.guild.ban(usuario, reason=f"Blacklist por {interaction.user.name} - Prazo: {prazo}")
+                await interaction.guild.ban(usuario, reason=f"Blacklist autorizada por {interaction.user.name} - Prazo: {prazo}")
                 acao_texto = "banido"
             else:
                 if membro_presente:
-                    await interaction.guild.kick(usuario, reason=f"Blacklist por {interaction.user.name} - Prazo: {prazo}")
+                    await interaction.guild.kick(usuario, reason=f"Blacklist autorizada por {interaction.user.name} - Prazo: {prazo}")
                     acao_texto = "expulso"
                 else:
-                    await interaction.followup.send(f"✅ Relatório criado! Aviso: {usuario.mention} **já tinha saído do servidor**, portanto não foi expulso pelo bot (mas o registro foi salvo).")
+                    await interaction.followup.send(f"Registro processado. {usuario.mention} já não se encontra no servidor, remoção ignorada.")
                     return
                 
-            await interaction.followup.send(f"✅ Registro criado! {usuario.mention} tomou Blacklist e foi **{acao_texto}** do servidor com sucesso.")
+            await interaction.followup.send(f"Operação concluída. {usuario.mention} sofreu blacklist e foi {acao_texto} do servidor.")
         except discord.Forbidden:
-            await interaction.followup.send(f"⚠️ O relatório foi salvo, mas o Discord **bloqueou a ação** automática. Remova-o manualmente!")
+            await interaction.followup.send("O relatório foi registrado, mas o sistema bloqueou a ação no usuário por hierarquia de cargos. Remova-o manualmente.")
         except Exception as e:
-            await interaction.followup.send(f"⚠️ Relatório salvo, mas ocorreu um erro com o Discord: {e}")
+            await interaction.followup.send(f"Relatório salvo. Ocorreu uma falha na API ao interagir com o usuário: {e}")
 
 
     # ---------------------------------------------------------
     # COMANDO: INFO EXÍLIO  
     # ---------------------------------------------------------
-    @app_commands.command(name="infoexilio", description="Puxa a ficha de exílio de um membro do banco de dados cibernético.")
+    @app_commands.command(name="infoexilio", description="Busca o histórico de exílio de um membro no sistema.")
     @app_commands.describe(usuario="Membro a ser consultado (Menção ou ID)")
     async def infoexilio(self, interaction: discord.Interaction, usuario: discord.User):
         await interaction.response.defer(ephemeral=False)
         canal = interaction.guild.get_channel(config.CANAL_EXILIO)
         
         async for msg in canal.history(limit=None):
-            if msg.author == self.bot.user and f"UserID:{usuario.id}" in msg.content:
+            if str(usuario.id) in msg.content:
                 conteudo_limpo = msg.content.replace(f"-# UserID:{usuario.id}", "")
                 
                 anexos_urls = "\n".join([anexo.url for anexo in msg.attachments])
                 if anexos_urls:
-                    conteudo_limpo += f"\n\n**📎 Arquivos Anexados (Provas):**\n{anexos_urls}"
+                    conteudo_limpo += f"\n\n**Anexos registrados:**\n{anexos_urls}"
                 
-                await interaction.followup.send(f"📄 **Registro Encontrado no Sistema (Mais Recente):**\n\n{conteudo_limpo}")
+                aviso_legado = ""
+                if msg.author != self.bot.user:
+                    aviso_legado = f"\n\n- Registro legado inserido manualmente por {msg.author.mention}."
+                
+                await interaction.followup.send(f"**Registro localizado:**\n\n{conteudo_limpo}{aviso_legado}")
                 return
         
-        await interaction.followup.send(f"❌ A ficha do usuário {usuario.mention} está limpa. Nenhum exílio encontrado.")
+        await interaction.followup.send(f"Nenhum registro de exílio encontrado para {usuario.mention}.")
 
 
     # ---------------------------------------------------------
     # COMANDO: INFO BLACKLIST  
     # ---------------------------------------------------------
-    @app_commands.command(name="infoblacklist", description="Puxa a ficha de blacklist de um indivíduo do banco de dados cibernético.")
+    @app_commands.command(name="infoblacklist", description="Busca o histórico de blacklist de um indivíduo no sistema.")
     @app_commands.describe(usuario="Indivíduo a ser consultado (Menção ou ID)")
     async def infoblacklist(self, interaction: discord.Interaction, usuario: discord.User):
         await interaction.response.defer(ephemeral=False)
         canal = interaction.guild.get_channel(config.CANAL_BLACKLIST)
         
         async for msg in canal.history(limit=None):
-            if msg.author == self.bot.user and f"UserID:{usuario.id}" in msg.content:
+            if str(usuario.id) in msg.content:
                 conteudo_limpo = msg.content.replace(f"-# UserID:{usuario.id}", "")
                 
                 anexos_urls = "\n".join([anexo.url for anexo in msg.attachments])
                 if anexos_urls:
-                    conteudo_limpo += f"\n\n**📎 Arquivos Anexados (Provas):**\n{anexos_urls}"
+                    conteudo_limpo += f"\n\n**Anexos registrados:**\n{anexos_urls}"
                 
-                await interaction.followup.send(f"📄 **Registro Encontrado no Sistema (Mais Recente):**\n\n{conteudo_limpo}")
+                aviso_legado = ""
+                if msg.author != self.bot.user:
+                    aviso_legado = f"\n\n- Registro legado inserido manualmente por {msg.author.mention}."
+                
+                await interaction.followup.send(f"**Registro localizado:**\n\n{conteudo_limpo}{aviso_legado}")
                 return
         
-        await interaction.followup.send(f"❌ A ficha de {usuario.mention} está limpa. Nenhuma blacklist encontrada.")
+        await interaction.followup.send(f"Nenhum registro de blacklist encontrado para {usuario.mention}.")
 
 async def setup(bot):
     await bot.add_cog(ComandosCog(bot))
