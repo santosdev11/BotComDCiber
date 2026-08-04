@@ -9,7 +9,7 @@ class ComandosCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # apenas cargos iguais e superiores à Diretoria
+    # trava de segurança: apenas cargos iguais ou superiores à Diretoria
     async def verificar_diretoria(self, interaction: discord.Interaction):
         if interaction.user.guild_permissions.administrator:
             return True
@@ -27,7 +27,28 @@ class ComandosCog(commands.Cog):
         return False
 
     # ---------------------------------------------------------
-    # COMANDO: PATRULHAMENTOS   
+    # COMANDO: HELP          
+    # ---------------------------------------------------------
+    @app_commands.command(name="help", description="Exibe a lista de comandos disponíveis no sistema cibernético.")
+    async def help_cmd(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="<:CYBER:1523690802021138563> Painel de Comandos - Defesa Cibernética",
+            description="Abaixo estão listados todos os comandos operacionais do sistema:",
+            color=discord.Color.dark_theme()
+        )
+        
+        embed.add_field(name="👮‍♂️ `/patrulhamentos`", value="Consulta a quantidade de patrulhas aprovadas de um militar.\n**Acesso:** Livre", inline=False)
+        embed.add_field(name="🛡️ `/exilar`", value="Gera relatório, exila e expulsa/bane o militar do servidor.\n**Acesso:** Diretoria+", inline=False)
+        embed.add_field(name="🛡️ `/blacklist`", value="Gera relatório, aplica blacklist e expulsa/bane do servidor.\n**Acesso:** Diretoria+", inline=False)
+        embed.add_field(name="📂 `/infoexilio`", value="Puxa a ficha de exílio completa de um membro.\n**Acesso:** Livre", inline=False)
+        embed.add_field(name="📂 `/infoblacklist`", value="Puxa a ficha de blacklist completa de um indivíduo.\n**Acesso:** Livre", inline=False)
+        
+        embed.set_footer(text=f"Solicitado por {interaction.user.name}", icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None)
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    # ---------------------------------------------------------
+    # COMANDO: PATRULHAMENTOS  
     # ---------------------------------------------------------
     @app_commands.command(name="patrulhamentos", description="Consulta quantos patrulhamentos aprovados um militar possui.")
     @app_commands.describe(militar="Militar que você deseja consultar (Ex: @Meliante)")
@@ -40,7 +61,7 @@ class ComandosCog(commands.Cog):
             return
         
         contagem = 0
-        async for msg in canal_log.history(limit=2000):
+        async for msg in canal_log.history(limit=10000):
             if msg.author == self.bot.user:
                 if f"ID: {militar.id}" in msg.content and "✅ APROVADO" in msg.content:
                     contagem += 1
@@ -55,7 +76,7 @@ class ComandosCog(commands.Cog):
 
 
     # ---------------------------------------------------------
-    # COMANDO: APLICAR EXÍLIO   
+    # COMANDO: APLICAR EXÍLIO  
     # ---------------------------------------------------------
     @app_commands.command(name="exilar", description="Exila um militar e registra no sistema.")
     @app_commands.describe(
@@ -75,7 +96,6 @@ class ComandosCog(commands.Cog):
     async def exilar(self, interaction: discord.Interaction, usuario: discord.User, nick: str, cargo: str, prazo: str, motivo: str, acao_discord: str, comprovacao_texto: str = None, comprovacao_arquivo: discord.Attachment = None):
         if not await self.verificar_diretoria(interaction): return
         
-        # exige pelo menos 1 prova
         if not comprovacao_texto and not comprovacao_arquivo:
             await interaction.response.send_message("⚠️ [ ERRO ] Você deve fornecer uma prova! Preencha o link no campo de texto OU anexe um arquivo.", ephemeral=True)
             return
@@ -87,10 +107,9 @@ class ComandosCog(commands.Cog):
             await interaction.followup.send("⚠️ Erro: Chat de Exílio não encontrado nas configurações.")
             return
 
-        # limite de ram
         arquivos = []
         if comprovacao_arquivo:
-            if comprovacao_arquivo.size > 8388608: # limite de 8mb
+            if comprovacao_arquivo.size > 8388608:
                 await interaction.followup.send("⚠️ [ ALERTA DE RAM ] O arquivo anexado é muito pesado (maior que 8MB). Por favor, use um link do YouTube/Imgur no campo 'comprovacao_texto' para não travar o sistema.")
                 return
             arquivos.append(await comprovacao_arquivo.to_file())
@@ -99,7 +118,7 @@ class ComandosCog(commands.Cog):
         data_atual = datetime.now().strftime("%d/%m/%Y")
         
         mensagem = (
-            "╭・:CYBER:  **𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐃𝐄 𝐃𝐄𝐅𝐄𝐒𝐀 𝐂𝐈𝐁𝐄𝐑𝐍É𝐓𝐈𝐂𝐀**\n"
+            "╭・<:CYBER:1523690802021138563>  **𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐃𝐄 𝐃𝐄𝐅𝐄𝐒𝐀 𝐂𝐈𝐁𝐄𝐑𝐍É𝐓𝐈𝐂𝐀**\n"
             "*𝑹𝑬𝑳𝑨𝑻Ó𝑹𝑰𝑶 𝑫𝑬 𝑬𝑿Í𝑳𝑰𝑶*\n\n"
             f"**𝐌𝐈𝐋𝐈𝐓𝐀𝐑:** {usuario.mention}\n"
             f"**𝐍𝐈𝐂𝐊:** {nick}\n\n"
@@ -136,7 +155,7 @@ class ComandosCog(commands.Cog):
 
 
     # ---------------------------------------------------------
-    # COMANDO: APLICAR BLACKLIST    
+    # COMANDO: APLICAR BLACKLIST  
     # ---------------------------------------------------------
     @app_commands.command(name="blacklist", description="Aplica blacklist a um usuário e registra no sistema.")
     @app_commands.describe(
@@ -155,7 +174,6 @@ class ComandosCog(commands.Cog):
     async def blacklist(self, interaction: discord.Interaction, usuario: discord.User, nick: str, prazo: str, motivo: str, acao_discord: str, comprovacao_texto: str = None, comprovacao_arquivo: discord.Attachment = None):
         if not await self.verificar_diretoria(interaction): return
         
-        # exige pelo menos 1 prova
         if not comprovacao_texto and not comprovacao_arquivo:
             await interaction.response.send_message("⚠️ [ ERRO ] Você deve fornecer uma prova! Preencha o link no campo de texto OU anexe um arquivo.", ephemeral=True)
             return
@@ -167,10 +185,9 @@ class ComandosCog(commands.Cog):
             await interaction.followup.send("⚠️ Erro: Chat de Blacklist não encontrado nas configurações.")
             return
 
-        # limite de ram
         arquivos = []
         if comprovacao_arquivo:
-            if comprovacao_arquivo.size > 8388608: # limite de 8mb
+            if comprovacao_arquivo.size > 8388608:
                 await interaction.followup.send("⚠️ [ ALERTA DE RAM ] O arquivo anexado é muito pesado (maior que 8MB). Por favor, use um link do YouTube/Imgur no campo 'comprovacao_texto' para não travar o sistema.")
                 return
             arquivos.append(await comprovacao_arquivo.to_file())
@@ -179,7 +196,7 @@ class ComandosCog(commands.Cog):
         data_atual = datetime.now().strftime("%d/%m/%Y")
         
         mensagem = (
-            "╭・:CYBER:  **𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐃𝐄 𝐃𝐄𝐅𝐄𝐒𝐀 𝐂𝐈𝐁𝐄𝐑𝐍É𝐓𝐈𝐂𝐀**\n"
+            "╭・<:CYBER:1523690802021138563>  **𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐃𝐄 𝐃𝐄𝐅𝐄𝐒𝐀 𝐂𝐈𝐁𝐄𝐑𝐍É𝐓𝐈𝐂𝐀**\n"
             "*𝑹𝑬𝑳𝑨𝑻Ó𝑹𝑰𝑶 𝑫𝑬 𝑩𝑳𝑨𝑪𝑲𝑳𝑰𝑺𝑻*\n\n"
             f"**𝐔𝐒𝐔Á𝐑𝐈𝐎:** {usuario.mention}\n"
             f"**𝐍𝐈𝐂𝐊:** {nick}\n\n"
@@ -215,7 +232,7 @@ class ComandosCog(commands.Cog):
 
 
     # ---------------------------------------------------------
-    # COMANDO: INFO EXÍLIO   
+    # COMANDO: INFO EXÍLIO  
     # ---------------------------------------------------------
     @app_commands.command(name="infoexilio", description="Puxa a ficha de exílio de um membro do banco de dados cibernético.")
     @app_commands.describe(usuario="Membro a ser consultado (Menção ou ID)")
@@ -223,17 +240,22 @@ class ComandosCog(commands.Cog):
         await interaction.response.defer(ephemeral=False)
         canal = interaction.guild.get_channel(config.CANAL_EXILIO)
         
-        async for msg in canal.history(limit=2000):
+        async for msg in canal.history(limit=None):
             if msg.author == self.bot.user and f"UserID:{usuario.id}" in msg.content:
                 conteudo_limpo = msg.content.replace(f"-# UserID:{usuario.id}", "")
-                await interaction.followup.send(f"📄 **Registro Encontrado no Sistema:**\n\n{conteudo_limpo}")
+                
+                anexos_urls = "\n".join([anexo.url for anexo in msg.attachments])
+                if anexos_urls:
+                    conteudo_limpo += f"\n\n**📎 Arquivos Anexados (Provas):**\n{anexos_urls}"
+                
+                await interaction.followup.send(f"📄 **Registro Encontrado no Sistema (Mais Recente):**\n\n{conteudo_limpo}")
                 return
         
         await interaction.followup.send(f"❌ A ficha do usuário {usuario.mention} está limpa. Nenhum exílio encontrado.")
 
 
     # ---------------------------------------------------------
-    # COMANDO: INFO BLACKLIST
+    # COMANDO: INFO BLACKLIST  
     # ---------------------------------------------------------
     @app_commands.command(name="infoblacklist", description="Puxa a ficha de blacklist de um indivíduo do banco de dados cibernético.")
     @app_commands.describe(usuario="Indivíduo a ser consultado (Menção ou ID)")
@@ -241,10 +263,15 @@ class ComandosCog(commands.Cog):
         await interaction.response.defer(ephemeral=False)
         canal = interaction.guild.get_channel(config.CANAL_BLACKLIST)
         
-        async for msg in canal.history(limit=2000):
+        async for msg in canal.history(limit=None):
             if msg.author == self.bot.user and f"UserID:{usuario.id}" in msg.content:
                 conteudo_limpo = msg.content.replace(f"-# UserID:{usuario.id}", "")
-                await interaction.followup.send(f"📄 **Registro Encontrado no Sistema:**\n\n{conteudo_limpo}")
+                
+                anexos_urls = "\n".join([anexo.url for anexo in msg.attachments])
+                if anexos_urls:
+                    conteudo_limpo += f"\n\n**📎 Arquivos Anexados (Provas):**\n{anexos_urls}"
+                
+                await interaction.followup.send(f"📄 **Registro Encontrado no Sistema (Mais Recente):**\n\n{conteudo_limpo}")
                 return
         
         await interaction.followup.send(f"❌ A ficha de {usuario.mention} está limpa. Nenhuma blacklist encontrada.")
