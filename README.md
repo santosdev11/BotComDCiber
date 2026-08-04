@@ -1,4 +1,4 @@
-# 🛡️ ComDCiber - Sistema Operacional Cibernético
+# 🛡️ ComDCibe
 
 Bot desenvolvido em Python para automatizar os processos administrativos, operacionais e punitivos do servidor **Comando de Defesa Cibernética**. 
 
