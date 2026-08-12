@@ -1,6 +1,7 @@
 import discord
 from discord.ui import Modal, TextInput, View, Button
 import config
+import re
 
 class MotivoModal(Modal, title='Relatório de Avaliação'):
     motivo = TextInput(label='Motivo / Observação', style=discord.TextStyle.paragraph, required=True)
@@ -85,6 +86,18 @@ class MotivoModal(Modal, title='Relatório de Avaliação'):
             
             canal_liberado = interaction.guild.get_channel(config.CANAL_AVAL_LIBERADO)
             if canal_liberado:
+                
+                inicio_match = re.search(r'(?i)(in[ií]cio:[^\n]+)', conteudo_sem_rodape)
+                fim_match = re.search(r'(?i)(fim:[^\n]+)', conteudo_sem_rodape)
+                
+                obs_linhas = []
+                if inicio_match:
+                    obs_linhas.append(inicio_match.group(1).strip())
+                if fim_match:
+                    obs_linhas.append(fim_match.group(1).strip())
+                    
+                texto_observacao = "~ " + "\n~ ".join(obs_linhas) if obs_linhas else "~ Avaliado via sistema cibernético."
+
                 msg_formatada = (
                     "[ AVAL CONCEDIDO ]\n"
                     "━━━━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -97,7 +110,7 @@ class MotivoModal(Modal, title='Relatório de Avaliação'):
                     "Motivo do Aval:\n"
                     f"~ {motivo_texto}\n\n"
                     "Observações:\n"
-                    "~ Avaliado via sistema cibernético.\n\n"
+                    f"{texto_observacao}\n\n"
                     "━━━━━━━━━━━━━━━━━━━━━━━\n"
                     "Data e Horário: Discord Fornece.\n"
                     "━━━━━━━━━━━━━━━━━━━━━━━"
