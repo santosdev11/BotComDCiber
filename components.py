@@ -141,11 +141,20 @@ class BaseAvaliacaoView(View):
         if interaction.user.guild_permissions.administrator:
             return True
 
-        if not discord.utils.get(interaction.user.roles, id=self.cargo_necessario):
-            await interaction.response.send_message("Acesso negado. Patente insuficiente para avaliação.", ephemeral=True)
-            return False
+        if discord.utils.get(interaction.user.roles, id=self.cargo_necessario):
+            return True
+
+        cargo_sta = interaction.guild.get_role(config.CARGO_STA)
         
-        return True
+        if not cargo_sta:
+            await interaction.response.send_message("Erro interno: Cargo STA não configurado no servidor.", ephemeral=True)
+            return False
+
+        if interaction.user.top_role.position >= cargo_sta.position:
+            return True
+            
+        await interaction.response.send_message("Acesso negado. Patente insuficiente para avaliação.", ephemeral=True)
+        return False
         
     async def aprovar(self, interaction: discord.Interaction):
         if await self.verificar_permissao(interaction):
