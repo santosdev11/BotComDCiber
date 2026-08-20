@@ -56,7 +56,7 @@ async def atualizar_dados_militar(guild: discord.Guild, membro: discord.Member, 
             if antiga_divisao and antiga_divisao in membro.roles:
                 roles_to_remove.append(antiga_divisao)
 
-    # nick
+    # nickname
     nome_atual = membro.display_name
     nome_base = re.sub(r'^[\{\[\(].*?[\}\]\)]\s*', '', nome_atual).strip()
     if not nome_base: 
@@ -259,11 +259,12 @@ class MainPainelSelect(UserSelect):
     async def callback(self, interaction: discord.Interaction):
         user_roles = [r.id for r in interaction.user.roles]
         
-        if not any(r in config.CARGOS_STA for r in user_roles) and not interaction.user.guild_permissions.administrator:
-            return await interaction.response.send_message("Acesso negado. Patente insuficiente.", ephemeral=True)
+        # apenas STA podem acessar
+        if not any(r in config.CARGOS_STA for r in user_roles):
+            return await interaction.response.send_message("❌ Acesso negado. Apenas membros designados da STA podem operar este terminal.", ephemeral=True)
 
-        is_criador = config.STA_CRIADOR in user_roles or interaction.user.guild_permissions.administrator
-        can_exile = any(r in config.STA_EXILIO for r in user_roles) or interaction.user.guild_permissions.administrator
+        is_criador = config.STA_CRIADOR in user_roles
+        can_exile = any(r in config.STA_EXILIO for r in user_roles)
         
         membro = self.values[0]
         if not isinstance(membro, discord.Member):
@@ -300,8 +301,11 @@ class PainelCog(commands.Cog):
 
     @app_commands.command(name="painel", description="Instala o painel persistente da STA no canal.")
     async def painel(self, interaction: discord.Interaction):
-        if not interaction.user.guild_permissions.administrator:
-            return await interaction.response.send_message("Apenas administradores podem instalar o painel.", ephemeral=True)
+        user_roles = [r.id for r in interaction.user.roles]
+        
+        # apenas STA pode dar /painel
+        if not any(r in config.CARGOS_STA for r in user_roles):
+            return await interaction.response.send_message("❌ Acesso negado. Apenas membros da STA podem instalar o painel.", ephemeral=True)
             
         embed = discord.Embed(
             title="<:CYBER:1523690802021138563> Sistema de Gerenciamento - STA",
