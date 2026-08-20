@@ -136,7 +136,7 @@ class PainelOperacionalView(View):
             if not self.is_criador: return await interaction.response.send_message("Limite hierárquico alcançado. Operação bloqueada.", ephemeral=True)
             return await interaction.response.send_message("Membro já é CO. Uso manual obrigatório para patentes superiores.", ephemeral=True)
             
-        await interaction.response.send_message(f"Promoção executada com sucesso na conta de {self.membro.mention}.", ephemeral=True)
+        await interaction.response.send_message(f"Promoção executada na conta de {self.membro.mention}.", ephemeral=True)
 
     async def rebaixar(self, interaction: discord.Interaction):
         idx, current_role = self.get_track_index()
@@ -147,7 +147,7 @@ class PainelOperacionalView(View):
         novo = interaction.guild.get_role(config.TRILHA_CARGOS[idx-1])
         await self.membro.remove_roles(antigo)
         await self.membro.add_roles(novo)
-        await interaction.response.send_message(f"Rebaixamento executado com sucesso na conta de {self.membro.mention}.", ephemeral=True)
+        await interaction.response.send_message(f"Rebaixamento executado na conta de {self.membro.mention}.", ephemeral=True)
 
     async def advertir(self, interaction: discord.Interaction):
         await interaction.response.send_message("Selecione a classificação:", view=AdvView(self.membro), ephemeral=True)
@@ -164,7 +164,7 @@ class MainPainelSelect(UserSelect):
         user_roles = [r.id for r in interaction.user.roles]
         
         if not any(r in config.CARGOS_STA for r in user_roles) and not interaction.user.guild_permissions.administrator:
-            return await interaction.response.send_message("Acesso negado. Você não tem o cargo necessário.", ephemeral=True)
+            return await interaction.response.send_message("Acesso negado. Patente insuficiente.", ephemeral=True)
 
         is_criador = config.STA_CRIADOR in user_roles or interaction.user.guild_permissions.administrator
         can_exile = any(r in config.STA_EXILIO for r in user_roles) or interaction.user.guild_permissions.administrator
@@ -203,9 +203,12 @@ class PainelCog(commands.Cog):
             description="Utilize o menu abaixo para localizar um militar e gerenciar sua ficha criminal e hierárquica.",
             color=discord.Color.dark_theme()
         )
+        
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1526286439967621203/1540052218869317692/8ae3ccc5-07a7-4c8a-82e6-3edefda96f79.png?ex=6a888ce5&is=6a873b65&hm=3d4ccf09bafcbb03754b4d0ab22afdaf865b51434a4b2ede459f38aadb54bbee&")
         embed.set_footer(text="Ações realizadas neste terminal são monitoradas.")
+        
         await interaction.channel.send(embed=embed, view=MainPainelView())
-        await interaction.response.send_message("Painel instalado com sucesso.", ephemeral=True)
+        await interaction.response.send_message("Painel instalado.", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(PainelCog(bot))
