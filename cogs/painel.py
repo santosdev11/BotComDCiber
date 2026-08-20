@@ -173,14 +173,21 @@ class MainPainelSelect(UserSelect):
         if not isinstance(membro, discord.Member):
             return await interaction.response.send_message("Erro: O alvo precisa estar no servidor.", ephemeral=True)
 
+        roles_limpos = []
+        for r in reversed(membro.roles):
+            if r.name == "@everyone": continue
+            if "---" in r.name or r.name.startswith(('<', '>', '│', '┃', '┌', '└')): continue
+            roles_limpos.append(r.mention)
+
+        cargos_texto = "\n".join(f"• {r}" for r in roles_limpos) if roles_limpos else "Nenhuma patente registrada."
+
         embed = discord.Embed(
             title=f"Terminal Operacional: {membro.display_name}",
             description="Selecione uma ação abaixo para este militar. Ações punitivas requerem logs formais.",
             color=discord.Color.dark_theme()
         )
         embed.set_thumbnail(url=membro.display_avatar.url)
-        cargos = ", ".join([r.mention for r in membro.roles if r.name != "@everyone"])
-        embed.add_field(name="Patentes Atuais", value=cargos if cargos else "Nenhuma")
+        embed.add_field(name="Patentes e Cursos Atuais", value=cargos_texto, inline=False)
 
         await interaction.response.send_message(embed=embed, view=PainelOperacionalView(membro, is_criador, can_exile), ephemeral=True)
 
