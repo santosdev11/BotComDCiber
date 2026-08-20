@@ -87,16 +87,14 @@ class MotivoModal(Modal, title='Relatório de Avaliação'):
             canal_liberado = interaction.guild.get_channel(config.CANAL_AVAL_LIBERADO)
             if canal_liberado:
                 
-                inicio_match = re.search(r'(?i)(in[ií]cio:[^\n]+)', conteudo_sem_rodape)
-                fim_match = re.search(r'(?i)(fim:[^\n]+)', conteudo_sem_rodape)
-                
-                obs_linhas = []
-                if inicio_match:
-                    obs_linhas.append(inicio_match.group(1).strip())
-                if fim_match:
-                    obs_linhas.append(fim_match.group(1).strip())
-                    
-                texto_observacao = "~ " + "\n~ ".join(obs_linhas) if obs_linhas else "~ Avaliado via sistema cibernético."
+                linhas_datas = []
+                for linha in conteudo_sem_rodape.split('\n'):
+                    if re.search(r'(?i)(in[ií]cio:|fim:)', linha):
+                        linha_limpa = linha.strip()
+                        if linha_limpa not in linhas_datas:
+                            linhas_datas.append(linha_limpa)
+                            
+                texto_observacao = "~ " + "\n~ ".join(linhas_datas) if linhas_datas else "~ Avaliado via sistema cibernético."
 
                 msg_formatada = (
                     "[ AVAL CONCEDIDO ]\n"
