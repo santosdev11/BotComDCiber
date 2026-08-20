@@ -155,7 +155,6 @@ class PainelOperacionalView(View):
     async def exilar(self, interaction: discord.Interaction):
         await interaction.response.send_modal(ExilioModal(self.membro))
 
-
 class MainPainelSelect(UserSelect):
     def __init__(self):
         super().__init__(placeholder="Selecione um militar para abrir a ficha...", max_values=1, custom_id="main_painel_select")
@@ -173,6 +172,7 @@ class MainPainelSelect(UserSelect):
         if not isinstance(membro, discord.Member):
             return await interaction.response.send_message("Erro: O alvo precisa estar no servidor.", ephemeral=True)
 
+        # Filtro de Limpeza e Organização Visual
         roles_limpos = []
         for r in reversed(membro.roles):
             if r.name == "@everyone": continue
@@ -187,7 +187,7 @@ class MainPainelSelect(UserSelect):
             color=discord.Color.dark_theme()
         )
         embed.set_thumbnail(url=membro.display_avatar.url)
-        embed.add_field(name="Patentes e Cursos Atuais", value=cargos_texto, inline=False)
+        embed.add_field(name="Patentes Atuais", value=cargos_texto, inline=False)
 
         await interaction.response.send_message(embed=embed, view=PainelOperacionalView(membro, is_criador, can_exile), ephemeral=True)
 
