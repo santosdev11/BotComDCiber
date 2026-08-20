@@ -17,22 +17,31 @@ class AdvModal(Modal, title="Aplicar Advertência"):
     async def on_submit(self, interaction: discord.Interaction):
         cargo = interaction.guild.get_role(config.CARGOS_ADV[self.nivel])
         if cargo:
-            await self.membro.add_roles(cargo)
+            try:
+                await self.membro.add_roles(cargo)
+            except discord.Forbidden:
+                return await interaction.response.send_message("❌ O bot não tem permissão para dar cargos. Suba o cargo dele nas configurações do servidor.", ephemeral=True)
             
         canal_adv = interaction.guild.get_channel(config.CANAL_LOG_ADV)
         if canal_adv:
             msg = (
-                "╭・<:CYBER:1523690802021138563>  **𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐃𝐄 𝐃𝐄𝐅𝐄𝐒𝐀 𝐂𝐈𝐁𝐄𝐑𝐍É𝐓𝐈𝐂𝐀**\n"
-                "*𝑹𝑬𝑳𝑨𝑻Ó𝑹𝑰𝑶 𝑫𝑬 𝑨𝑫𝑽𝑬𝑹𝑻Ê𝑵𝑪𝑰𝑨*\n\n"
-                f"**𝐌𝐈𝐋𝐈𝐓𝐀𝐑:** {self.membro.mention}\n"
-                f"**𝐍𝐈𝐂𝐊:** {self.membro.display_name}\n\n"
-                f"**𝐂𝐀𝐑𝐆𝐎:** {self.membro.top_role.name}\n\n"
-                f"**𝐂𝐋𝐀𝐒𝐒𝐈𝐅𝐈𝐂𝐀ÇÃ𝐎:** {self.nivel}ª Advertência\n\n"
-                f"**𝐌𝐎𝐓𝐈𝐕𝐎:** — {self.motivo.value}\n"
-                f"**𝐂𝐎𝐌𝐏𝐑𝐎𝐕𝐀ÇÕ𝐄𝐒:**\n• {self.provas.value}\n\n"
-                f"**𝐑𝐄𝐆𝐈𝐒𝐓𝐑𝐀𝐃𝐎 𝐏𝐎𝐑:** {interaction.user.mention}\n"
-                f"**𝐃𝐀𝐓𝐀:** {datetime.now().strftime('%d/%m/%Y')}\n\n"
-                "**STATUS: ADVERTIDO**"
+                "╭・<:CYBER:1523690802021138563> **𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐃𝐄 𝐃𝐄𝐅𝐄𝐒𝐀 𝐂𝐈𝐁𝐄𝐑𝐍É𝐓𝐈𝐂𝐀**\n"
+                "*𝑹𝑬𝑳𝑨𝑻Ó𝑹𝑰𝑶 𝑫𝑬 𝑨𝑫𝑽𝑬𝑹𝑻Ê𝑵𝑪𝑰𝑨*\n"
+                "> \n"
+                f"> **𝐌𝐈𝐋𝐈𝐓𝐀𝐑:** {self.membro.mention}\n"
+                f"> **𝐍𝐈𝐂𝐊:** {self.membro.display_name}\n"
+                "> \n"
+                f"> **𝐂𝐀𝐑𝐆𝐎:** {self.membro.top_role.name}\n"
+                "> \n"
+                f"> **𝐂𝐋𝐀𝐒𝐒𝐈𝐅𝐈𝐂𝐀ÇÃ𝐎:** {self.nivel}ª Advertência\n"
+                "> \n"
+                f"> **𝐌𝐎𝐓𝐈𝐕𝐎:** — {self.motivo.value}\n"
+                "> **𝐂𝐎𝐌𝐏𝐑𝐎𝐕𝐀ÇÕ𝐄𝐒:**\n"
+                f"> • {self.provas.value}\n"
+                "> \n"
+                f"> **𝐑𝐄𝐆𝐈𝐒𝐓𝐑𝐀𝐃𝐎 𝐏𝐎𝐑:** {interaction.user.mention}\n"
+                f"> **𝐃𝐀𝐓𝐀:** {datetime.now().strftime('%d/%m/%Y')}\n\n"
+                "`STATUS:` **ADVERTIDO**"
             )
             await canal_adv.send(msg)
         await interaction.response.send_message(f"Operação concluída. {self.nivel}ª Advertência aplicada em {self.membro.mention}.", ephemeral=True)
@@ -52,17 +61,23 @@ class ExilioModal(Modal, title="Aplicar Exílio (Ação Direta)"):
             return await interaction.response.send_message("Erro: Canal de exílio não configurado.", ephemeral=True)
 
         msg = (
-            "╭・<:CYBER:1523690802021138563>  **𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐃𝐄 𝐃𝐄𝐅𝐄𝐒𝐀 𝐂𝐈𝐁𝐄𝐑𝐍É𝐓𝐈𝐂𝐀**\n"
-            "*𝑹𝑬𝑳𝑨𝑻Ó𝑹𝑰𝑶 𝑫𝑬 𝑬𝑿Í𝑳𝑰𝑶*\n\n"
-            f"**𝐌𝐈𝐋𝐈𝐓𝐀𝐑:** {self.membro.mention}\n"
-            f"**𝐍𝐈𝐂𝐊:** {self.membro.display_name}\n\n"
-            f"**𝐂𝐀𝐑𝐆𝐎:** {self.membro.top_role.name}\n\n"
-            f"**𝐏𝐑𝐀𝐙𝐎:** {self.prazo.value}\n\n"
-            f"**𝐌𝐎𝐓𝐈𝐕𝐎:** — {self.motivo.value}\n"
-            f"**𝐂𝐎𝐌𝐏𝐑𝐎𝐕𝐀ÇÕ𝐄𝐒:**\n• {self.provas.value}\n\n"
-            f"**𝐀𝐔𝐓𝐎𝐑𝐈𝐙𝐀𝐃𝐎 𝐏𝐎𝐑:** {interaction.user.mention}\n"
-            f"**𝐃𝐀𝐓𝐀:** {datetime.now().strftime('%d/%m/%Y')}\n\n"
-            "**STATUS: EXILADO**\n"
+            "╭・<:CYBER:1523690802021138563> **𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐃𝐄 𝐃𝐄𝐅𝐄𝐒𝐀 𝐂𝐈𝐁𝐄𝐑𝐍É𝐓𝐈𝐂𝐀**\n"
+            "*𝑹𝑬𝑳𝑨𝑻Ó𝑹𝑰𝑶 𝑫𝑬 𝑬𝑿Í𝑳𝑰𝑶*\n"
+            "> \n"
+            f"> **𝐌𝐈𝐋𝐈𝐓𝐀𝐑:** {self.membro.mention}\n"
+            f"> **𝐍𝐈𝐂𝐊:** {self.membro.display_name}\n"
+            "> \n"
+            f"> **𝐂𝐀𝐑𝐆𝐎:** {self.membro.top_role.name}\n"
+            "> \n"
+            f"> **𝐏𝐑𝐀𝐙𝐎:** {self.prazo.value}\n"
+            "> \n"
+            f"> **𝐌𝐎𝐓𝐈𝐕𝐎:** — {self.motivo.value}\n"
+            "> **𝐂𝐎𝐌𝐏𝐑𝐎𝐕𝐀ÇÕ𝐄𝐒:**\n"
+            f"> • {self.provas.value}\n"
+            "> \n"
+            f"> **𝐀𝐔𝐓𝐎𝐑𝐈𝐙𝐀𝐃𝐎 𝐏𝐎𝐑:** {interaction.user.mention}\n"
+            f"> **𝐃𝐀𝐓𝐀:** {datetime.now().strftime('%d/%m/%Y')}\n\n"
+            "`STATUS:` **EXILADO**\n"
             f"-# UserID:{self.membro.id}"
         )
         await canal.send(msg)
@@ -71,8 +86,7 @@ class ExilioModal(Modal, title="Aplicar Exílio (Ação Direta)"):
             await interaction.guild.kick(self.membro, reason=f"Exilado por {interaction.user.name}")
             await interaction.response.send_message("Operação concluída. O militar foi exilado e expulso do servidor.", ephemeral=True)
         except Exception as e:
-            await interaction.response.send_message(f"Relatório salvo, mas houve falha ao expulsar: {e}", ephemeral=True)
-
+            await interaction.response.send_message(f"Relatório salvo, mas houve falha ao expulsar. O bot tem permissão?: {e}", ephemeral=True)
 
 class AdvSelect(Select):
     def __init__(self, membro: discord.Member):
@@ -122,32 +136,48 @@ class PainelOperacionalView(View):
         return -1, None
 
     async def promover(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         idx, current_role = self.get_track_index()
+        
         if idx == -1:
-            if not self.is_criador: return await interaction.response.send_message("Usuário fora da hierarquia linear (AP-CO). Ação bloqueada.", ephemeral=True)
+            if not self.is_criador: 
+                return await interaction.followup.send("Usuário fora da hierarquia linear (AP-CO). Ação bloqueada.")
             novo = interaction.guild.get_role(config.TRILHA_CARGOS[0])
-            await self.membro.add_roles(novo)
+            try:
+                if novo: await self.membro.add_roles(novo)
+            except discord.Forbidden:
+                return await interaction.followup.send("❌ Erro de Hierarquia: O cargo do bot está abaixo do cargo deste membro.")
         elif idx < len(config.TRILHA_CARGOS) - 1:
             antigo = interaction.guild.get_role(current_role)
             novo = interaction.guild.get_role(config.TRILHA_CARGOS[idx+1])
-            await self.membro.remove_roles(antigo)
-            await self.membro.add_roles(novo)
+            try:
+                if antigo: await self.membro.remove_roles(antigo)
+                if novo: await self.membro.add_roles(novo)
+            except discord.Forbidden:
+                return await interaction.followup.send("❌ Erro de Hierarquia: O bot precisa estar no topo da lista de cargos do servidor para modificar patentes.")
         else:
-            if not self.is_criador: return await interaction.response.send_message("Limite hierárquico alcançado. Operação bloqueada.", ephemeral=True)
-            return await interaction.response.send_message("Membro já é CO. Uso manual obrigatório para patentes superiores.", ephemeral=True)
+            if not self.is_criador: 
+                return await interaction.followup.send("Limite hierárquico alcançado. Operação bloqueada.")
+            return await interaction.followup.send("Membro já é CO. Uso manual obrigatório para patentes superiores.")
             
-        await interaction.response.send_message(f"Promoção executada na conta de {self.membro.mention}.", ephemeral=True)
+        await interaction.followup.send(f"Promoção executada na conta de {self.membro.mention}.")
 
     async def rebaixar(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         idx, current_role = self.get_track_index()
+        
         if idx <= 0:
-            return await interaction.response.send_message("Rebaixamento bloqueado. O usuário já é um Aprendiz ou não está na trilha AP-CO.", ephemeral=True)
+            return await interaction.followup.send("Rebaixamento bloqueado. O usuário já é um Aprendiz ou não está na trilha AP-CO.")
         
         antigo = interaction.guild.get_role(current_role)
         novo = interaction.guild.get_role(config.TRILHA_CARGOS[idx-1])
-        await self.membro.remove_roles(antigo)
-        await self.membro.add_roles(novo)
-        await interaction.response.send_message(f"Rebaixamento executado na conta de {self.membro.mention}.", ephemeral=True)
+        try:
+            if antigo: await self.membro.remove_roles(antigo)
+            if novo: await self.membro.add_roles(novo)
+        except discord.Forbidden:
+            return await interaction.followup.send("❌ Erro de Hierarquia: O bot não tem permissão para rebaixar este membro. Suba o cargo do bot nas configurações.")
+            
+        await interaction.followup.send(f"Rebaixamento executado na conta de {self.membro.mention}.")
 
     async def advertir(self, interaction: discord.Interaction):
         await interaction.response.send_message("Selecione a classificação:", view=AdvView(self.membro), ephemeral=True)
@@ -172,7 +202,6 @@ class MainPainelSelect(UserSelect):
         if not isinstance(membro, discord.Member):
             return await interaction.response.send_message("Erro: O alvo precisa estar no servidor.", ephemeral=True)
 
-        # Filtro de Limpeza e Organização Visual
         roles_limpos = []
         for r in reversed(membro.roles):
             if r.name == "@everyone": continue
