@@ -67,6 +67,9 @@ class ComandosCog(commands.Cog):
     async def infoexilio(self, interaction: discord.Interaction, usuario: discord.User):
         await interaction.response.defer(ephemeral=False)
         canal = interaction.guild.get_channel(config.CANAL_EXILIO)
+        if not canal:
+            return await interaction.followup.send("Erro de configuração: canal de exílio não localizado.")
+
         async for msg in canal.history(limit=None):
             if str(usuario.id) in msg.content:
                 conteudo_limpo = msg.content.replace(f"-# UserID:{usuario.id}", "")
@@ -80,6 +83,9 @@ class ComandosCog(commands.Cog):
     async def infoblacklist(self, interaction: discord.Interaction, usuario: discord.User):
         await interaction.response.defer(ephemeral=False)
         canal = interaction.guild.get_channel(config.CANAL_BLACKLIST)
+        if not canal:
+            return await interaction.followup.send("Erro de configuração: canal de blacklist não localizado.")
+
         async for msg in canal.history(limit=None):
             if str(usuario.id) in msg.content:
                 conteudo_limpo = msg.content.replace(f"-# UserID:{usuario.id}", "")
