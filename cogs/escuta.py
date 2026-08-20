@@ -23,7 +23,6 @@ class EscutaCog(commands.Cog):
             arquivos = []
             if message.attachments:
                 for anexo in message.attachments:
-                    # Trava de RAM: Ignora arquivos maiores que 8MB para não dar crash na Discloud
                     if len(arquivos) < 10 and anexo.size <= 8388608:
                         arquivos.append(await anexo.to_file())
             
@@ -43,7 +42,6 @@ class EscutaCog(commands.Cog):
         for canal_id, tipo, log_id, cargo_id, palavras_chave in configuracoes:
             canal = self.bot.get_channel(canal_id)
             if canal:
-                # Aumentado para buscar até 50 mensagens para trás
                 async for msg in canal.history(limit=50):
                     if msg.author.bot:
                         continue
