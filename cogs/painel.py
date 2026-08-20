@@ -4,6 +4,63 @@ from discord import app_commands
 from discord.ui import View, UserSelect, Button, Select, Modal, TextInput
 import config
 from datetime import datetime
+import re
+
+# divisoes e prefixos
+DIVISOES = [
+    1521956217545560064, # Candidatos
+    1521956187451429067, # Praças
+    1521956151124824225, # Graduados
+    1521956081650110675, # Oficiais
+    1521950209800671423  # Alto Comando
+]
+
+MAP_CARGOS = {
+    config.TRILHA_CARGOS[0]: (1521956217545560064, "{ 𝓐𝓟 }"),
+    config.TRILHA_CARGOS[1]: (1521956187451429067, "{ 𝓣𝓜 }"),
+    config.TRILHA_CARGOS[2]: (1521956151124824225, "{ 𝓞𝓡 }"),
+    config.TRILHA_CARGOS[3]: (1521956081650110675, "{ 𝓔𝓒 }"),
+    config.TRILHA_CARGOS[4]: (1521956081650110675, "{ 𝓐𝓔 }"),
+    config.TRILHA_CARGOS[5]: (1521950209800671423, "{ 𝓒𝓘 }"),
+    config.TRILHA_CARGOS[6]: (1521950209800671423, "{ 𝓒𝓞 }")
+}
+
+async def atualizar_dados_militar(guild: discord.Guild, membro: discord.Member, novo_cargo_id: int):
+    if novo_cargo_id not in MAP_CARGOS:
+        return
+
+    divisao_id, prefixo = MAP_CARGOS[novo_cargo_id]
+
+    # DIV
+    roles_to_add = []
+    roles_to_remove = []
+
+    nova_divisao = guild.get_role(divisao_id)
+    if nova_divisao and nova_divisao not in membro.roles:
+        roles_to_add.append(nova_divisao)
+
+    for d_id in DIVISOES:
+        if d_id != divisao_id:
+            antiga_divisao = guild.get_role(d_id)
+            if antiga_divisao and antiga_divisao in membro.roles:
+                roles_to_remove.append(antiga_divisao)
+
+    # NICK
+    nome_atual = membro.display_name
+    nome_base = re.sub(r'^[\{\[\(].*?[\}\]\)]\s*', '', nome_atual).strip()
+    if not nome_base: 
+        nome_base = "Militar"
+
+    novo_nick = f"{prefixo} {nome_base}"[:32] # 32 é o limite do dc
+
+    try:
+        if roles_to_remove: await membro.remove_roles(*roles_to_remove)
+        if roles_to_add: await membro.add_roles(*roles_to_add)
+        if membro.display_name != novo_nick:
+            await membro.edit(nick=novo_nick)
+    except discord.Forbidden:
+        pass
+
 
 class AdvModal(Modal, title="Aplicar Advertência"):
     motivo = TextInput(label="Motivo", style=discord.TextStyle.long, required=True)
@@ -45,6 +102,7 @@ class AdvModal(Modal, title="Aplicar Advertência"):
             )
             await canal_adv.send(msg)
         await interaction.response.send_message(f"Operação concluída. {self.nivel}ª Advertência aplicada em {self.membro.mention}.", ephemeral=True)
+
 
 class ExilioModal(Modal, title="Aplicar Exílio (Ação Direta)"):
     motivo = TextInput(label="Motivo", style=discord.TextStyle.long, required=True)
@@ -88,6 +146,7 @@ class ExilioModal(Modal, title="Aplicar Exílio (Ação Direta)"):
         except Exception as e:
             await interaction.response.send_message(f"Relatório salvo, mas houve falha ao expulsar. O bot tem permissão?: {e}", ephemeral=True)
 
+
 class AdvSelect(Select):
     def __init__(self, membro: discord.Member):
         self.membro = membro
@@ -105,6 +164,7 @@ class AdvView(View):
     def __init__(self, membro: discord.Member):
         super().__init__(timeout=60)
         self.add_item(AdvSelect(membro))
+
 
 class PainelOperacionalView(View):
     def __init__(self, membro: discord.Member, is_criador: bool, can_exile: bool):
@@ -142,17 +202,23 @@ class PainelOperacionalView(View):
         if idx == -1:
             if not self.is_criador: 
                 return await interaction.followup.send("Usuário fora da hierarquia linear (AP-CO). Ação bloqueada.")
-            novo = interaction.guild.get_role(config.TRILHA_CARGOS[0])
+            novo_id = config.TRILHA_CARGOS[0]
+            novo = interaction.guild.get_role(novo_id)
             try:
-                if novo: await self.membro.add_roles(novo)
+                if novo: 
+                    await self.membro.add_roles(novo)
+                    await atualizar_dados_militar(interaction.guild, self.membro, novo_id)
             except discord.Forbidden:
                 return await interaction.followup.send("❌ Erro de Hierarquia: O cargo do bot está abaixo do cargo deste membro.")
         elif idx < len(config.TRILHA_CARGOS) - 1:
             antigo = interaction.guild.get_role(current_role)
-            novo = interaction.guild.get_role(config.TRILHA_CARGOS[idx+1])
+            novo_id = config.TRILHA_CARGOS[idx+1]
+            novo = interaction.guild.get_role(novo_id)
             try:
                 if antigo: await self.membro.remove_roles(antigo)
-                if novo: await self.membro.add_roles(novo)
+                if novo: 
+                    await self.membro.add_roles(novo)
+                    await atualizar_dados_militar(interaction.guild, self.membro, novo_id)
             except discord.Forbidden:
                 return await interaction.followup.send("❌ Erro de Hierarquia: O bot precisa estar no topo da lista de cargos do servidor para modificar patentes.")
         else:
@@ -160,7 +226,7 @@ class PainelOperacionalView(View):
                 return await interaction.followup.send("Limite hierárquico alcançado. Operação bloqueada.")
             return await interaction.followup.send("Membro já é CO. Uso manual obrigatório para patentes superiores.")
             
-        await interaction.followup.send(f"Promoção executada na conta de {self.membro.mention}.")
+        await interaction.followup.send(f"✅ Promoção executada na conta de {self.membro.mention}. Divisão e Nickname sincronizados.")
 
     async def rebaixar(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
@@ -170,20 +236,24 @@ class PainelOperacionalView(View):
             return await interaction.followup.send("Rebaixamento bloqueado. O usuário já é um Aprendiz ou não está na trilha AP-CO.")
         
         antigo = interaction.guild.get_role(current_role)
-        novo = interaction.guild.get_role(config.TRILHA_CARGOS[idx-1])
+        novo_id = config.TRILHA_CARGOS[idx-1]
+        novo = interaction.guild.get_role(novo_id)
         try:
             if antigo: await self.membro.remove_roles(antigo)
-            if novo: await self.membro.add_roles(novo)
+            if novo: 
+                await self.membro.add_roles(novo)
+                await atualizar_dados_militar(interaction.guild, self.membro, novo_id)
         except discord.Forbidden:
             return await interaction.followup.send("❌ Erro de Hierarquia: O bot não tem permissão para rebaixar este membro. Suba o cargo do bot nas configurações.")
             
-        await interaction.followup.send(f"Rebaixamento executado na conta de {self.membro.mention}.")
+        await interaction.followup.send(f"✅ Rebaixamento executado na conta de {self.membro.mention}. Divisão e Nickname sincronizados.")
 
     async def advertir(self, interaction: discord.Interaction):
         await interaction.response.send_message("Selecione a classificação:", view=AdvView(self.membro), ephemeral=True)
 
     async def exilar(self, interaction: discord.Interaction):
         await interaction.response.send_modal(ExilioModal(self.membro))
+
 
 class MainPainelSelect(UserSelect):
     def __init__(self):
