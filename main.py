@@ -14,6 +14,7 @@ class ComDCiberBot(commands.Bot):
         intents = discord.Intents.default()
         intents.message_content = True
         intents.members = True
+        self.ready_run = False
         super().__init__(command_prefix='!', intents=intents, help_command=None)
 
     async def setup_hook(self):
@@ -31,6 +32,10 @@ class ComDCiberBot(commands.Bot):
         print("[ INIT ] Módulos e comandos sincronizados.")
 
     async def on_ready(self):
+        if self.ready_run: 
+            return
+        self.ready_run = True
+        
         print(f"[ INIT ] Sistema operando via {self.user}.")
 
         for guild in self.guilds:
@@ -40,27 +45,27 @@ class ComDCiberBot(commands.Bot):
                       config.CANAL_LOG_AVAL, config.CANAL_AVAL_LIBERADO, config.CANAL_METAS, config.CANAL_LOG_METAS]
             for canal_id in canais:
                 if not guild.get_channel(canal_id):
-                    print(f"[ ERRO ] Canal ID {canal_id} não localizado no config.py.")
+                    print(f"[ ERRO ] Canal ID {canal_id} ausente.")
             
             cargos = [config.CARGO_ACESSO_BASICO, config.CARGO_CHEFIA_OP, config.CARGO_PERM_AVAL, 
                       config.CARGO_AVAL_CONCEDIDO, config.CARGO_PERM_METAS]
             for cargo_id in cargos:
                 if not guild.get_role(cargo_id):
-                    print(f"[ ERRO ] Cargo ID {cargo_id} não localizado no config.py.")
+                    print(f"[ ERRO ] Cargo ID {cargo_id} ausente.")
             
             print("[ INFO ] Verificação de IDs concluída.")
 
     async def on_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
-        if isinstance(error, app_commands.MissingRole):
+        if isinstance(error, app_commands.MissingRole) or isinstance(error, app_commands.MissingPermissions):
             await interaction.response.send_message("Acesso negado. Patente insuficiente.", ephemeral=True)
         else:
-            await interaction.response.send_message(f"[ ERRO INTERNO ] Exceção capturada: {error}", ephemeral=True)
+            await interaction.response.send_message("Falha na execução. Equipe de engenharia acionada.", ephemeral=True)
             print(f"[ FATAL ] {error}")
 
 bot = ComDCiberBot()
 
 if __name__ == '__main__':
     if TOKEN is None:
-        print("[ FATAL ] Discord Token ausente no arquivo .env.")
+        print("[ FATAL ] Token ausente.")
     else:
         bot.run(TOKEN)
